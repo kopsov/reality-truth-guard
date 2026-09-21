@@ -1,260 +1,261 @@
 ---
 name: reality-truth-guard
-description: Сторож правды торгового движка. Проверяет не то, хорошо ли работает стратегия, а то, правду ли говорит движок: совпадёт ли то, что он посчитал на истории, с тем, что случится у брокера на живом счёте. Подключать к любой работе с торговым ботом, движком, бэктестом, прогоном, эталоном, живым слоем, исполнением, отложенными ордерами, стопом и целью, безубытком, объёмом и риском, спредом, проскальзыванием, комиссией, задержкой, временем и часовыми поясами, разметкой свечей и старших таймфреймов, рядом котировок, сигналами и индикаторами, состоянием позиции и сверкой с терминалом MT5. Обязателен перед тем, как показать кому-либо числа прогона, и перед переносом правки в эталон. Отвечает вердиктом — доказано, доказано частично, не доказано, провалено, заблокировано — и никогда не превращает «не знаю» в «наверное, нормально». English — a reality-truth guard for trading engines: it checks whether backtest numbers can actually be reproduced in live execution (look-ahead, intra-bar ordering, order feasibility, spread side, slippage, lot sizing, broker time), and answers with a verdict instead of a guess.
+description: A truth guard for trading engines. It does not check whether the strategy works — it checks whether the engine tells the truth: can the numbers it produced on history actually be produced at a broker on a live account? Use for any work on a trading bot, engine, backtest, run, reference snapshot, live layer, order execution, pending orders, stop and target, breakeven, position size and risk, spread, slippage, commission, latency, time and timezones, candle markup and higher timeframes, quote series, signals and indicators, position state, and reconciliation with an MT5 terminal. Mandatory before showing anyone the numbers of a run and before promoting a change into a reference engine. Answers with a verdict — proven, partly proven, not proven, failed, blocked — and never turns "I don't know" into "probably fine". По-русски — сторож правды торгового движка: проверяет, можно ли получить в реальном исполнении те числа, что движок показал на истории; перевод документации лежит в папке ru.
 ---
 
-# REALITY TRUTH GUARD — сторож правды торгового движка
+# REALITY TRUTH GUARD — a truth guard for trading engines
 
-## Что это
+## What this is
 
-Последний технический сторож между «на истории всё прекрасно» и «мы реально
-поставили на это деньги».
+The last technical guard standing between "it all looks wonderful on history" and
+"we have actually put money on this".
 
-Навык не оценивает стратегию. Он оценивает **движок**: доказано ли, что число,
-полученное на истории, можно получить в бою. Пока это не доказано — число
-считается не подтверждённым, как бы красиво оно ни выглядело и сколько бы раз его
-ни показывали раньше.
+The skill does not judge the strategy. It judges the **engine**: is it proven that a
+number obtained on history can be obtained in live trading? Until that is proven the
+number counts as unconfirmed, however pretty it looks and however many times it has
+been shown before.
 
-Навык вырос не из теории. Он собран из бед, которые случались в настоящих боевых
-проектах и стоили нарисованной прибыли: разметка по чужим суткам, вход в минуту
-собственного сигнала, безубыток заявкой, которой брокер не принимает, фрактал,
-подтверждаемый свечой, внутри которой уже идёт торговля, ордер, похороненный
-закрытием свечи. Все случаи с числами — в `БАЗА-ОТКАЗОВ.md`.
+The skill did not grow out of theory. It is assembled from failures that happened in
+real live projects and cost painted profit: markup cut by somebody else's days, an
+entry inside its own signal minute, a breakeven order a broker would not accept, a
+fractal confirmed by the candle trading is already happening inside, an order buried
+by a candle close. Every case with its numbers is in
+[`FAILURE-DATABASE.md`](FAILURE-DATABASE.md).
 
-## Главный принцип
+## The governing principle
 
-> **Не проверяй, работает ли стратегия. Проверяй, правду ли говорит движок.**
+> **Do not check whether the strategy works. Check whether the engine tells the
+> truth.**
 
-Из него следуют три рабочих правила, которые не обсуждаются:
+Three working rules follow from it, and they are not up for discussion:
 
-1. **Результат истории не равен результату боя, пока соответствие не доказано.**
-   Нет доказательства — статус «не доказано», а не «скорее всего сходится».
-2. **Разошлось — это ошибка счёта, а не условность модели.** Чинить движок, а не
-   объяснять словами. Законных исключений ровно два: проскальзывание и величина
-   спреда, которая может измениться.
-3. **Задача навыка — не сделать результат красивее, а сделать его правдивым.**
-   Числа после проверки почти всегда становятся хуже. Это нормальный исход
-   работы, а не провал.
+1. **A historical result does not equal a live result until the match is proven.** No
+   proof means the status is "not proven", not "probably matches".
+2. **A divergence is a computation error, not a modelling convention.** Fix the
+   engine, do not explain it away. There are exactly two lawful exceptions: slippage
+   and the size of the spread, which may change.
+3. **The job is not to make the result prettier but to make it true.** Numbers almost
+   always get worse after an audit. That is the normal outcome of the work, not a
+   failure of it.
 
-## Чего навык не делает
+## What the skill does not do
 
-- Не повышает винрейт, не уменьшает просадку, не улучшает прибыль.
-- Не меняет правила сетапа, входы, выходы и пороги ради лучших чисел.
-- Не удаляет «плохие» сделки и не подгоняет параметры.
-- Не защищает ни стратегию, ни прежний эталон, ни собственные прошлые выводы.
+- It does not raise the win rate, reduce the drawdown or improve the profit.
+- It does not change setup rules, entries, exits or thresholds for better numbers.
+- It does not delete "bad" trades and does not tune parameters.
+- It defends neither the strategy, nor the previous reference, nor its own earlier
+  conclusions.
 
-Если после проверки движок стал считать хуже — навык сработал.
+If the engine computes worse after the audit, the guard has done its job.
 
-## Когда включаться самому, без просьбы
+## When to engage without being asked
 
-Любая правка, способная сдвинуть торговый результат, обязана пройти сторожа.
-Признаки: тронуты стратегия, движок, прогон, эталон, живой слой, исполнение
-ордеров, сопровождение позиции, стоп, цель, безубыток, частичная фиксация, объём,
-риск, плечо, маржа, спред, комиссия, своп, проскальзывание, задержка, ряд
-котировок, источник данных, разметка свечей и старших таймфреймов, сессии,
-часовые пояса и переходы на летнее время, календарь новостей, индикаторы,
-рождение сигнала, состояние сделки, договор с исполнителем, советник, паспорт
-инструмента.
+Any change capable of moving a trading result must pass the guard. The signs: someone
+touched the strategy, the engine, a run, the reference snapshot, the live layer, order
+execution, position management, stop, target, breakeven, partial close, volume, risk,
+leverage, margin, spread, commission, swap, slippage, latency, the quote series, the
+data source, candle markup and higher timeframes, sessions, timezones and
+daylight-saving switches, the news calendar, indicators, signal generation, trade
+state, the contract with the executor, the expert advisor, the instrument spec.
 
-Ещё три случая, где сторож обязателен независимо от того, что менялось:
+Three more cases where the guard is mandatory regardless of what changed:
 
-- **перед подачей человеку любой таблицы или числа прогона;**
-- **перед переносом правки из черновика в эталон;**
-- **перед заведением или обновлением бота в боевом исполнителе.**
+- **before serving anyone a table or a number from a run;**
+- **before promoting a change from a draft into the reference engine;**
+- **before creating or updating a bot in a live executor.**
 
-Без зелёного сторожа числа не подаются и правка не переносится.
+Without a green guard the numbers are not served and the change is not promoted.
 
-## Порядок работы
+## The procedure
 
-### Шаг 0. Разбор влияния правки
+### Step 0. Impact analysis
 
-Прежде чем что-то проверять, назвать, **что именно могло измениться**, и
-построить цепочку вниз. Проверять только тронутое место запрещено: беда почти
-всегда вылезает ниже по течению.
-
-```
-ДАННЫЕ ─► РАЗМЕТКА ─► СИГНАЛ ─► ЗАЯВКА ─► ИСПОЛНЕНИЕ ─► ПОЗИЦИЯ ─► ВЫХОД ─► R ─► ЭКВИТИ ─► ПРОСАДКА ─► ИТОГ
-```
-
-Частые цепочки:
-
-- расчёт лота → размер позиции → риск → деньги → эквити → просадка → итог;
-- граница свечи → разметка старших ТФ → зона → сигнал → все сделки;
-- момент исполнения → цена входа → R каждой сделки → все метрики разом;
-- спред → цена входа и срабатывание стопа → исход → винрейт и профит-фактор.
-
-Тронут лот — мерить не лот, а весь хвост цепочки.
-
-### Шаг 1. Двенадцать вопросов боя
-
-По каждому решению, прежде чем показывать числа.
-
-1. **Когда заявка появляется у брокера?** Решение принято по закрытию свечи —
-   значит внутри этой свечи исполняться нечему.
-2. **Примет ли брокер такую заявку?** Стоп покупки ниже цены, продажи выше.
-3. **Сколько заявка живёт?** У каждой команды свой срок годности, и просроченная
-   не исполняется.
-4. **Умеет ли исполнитель то, что просит движок?** Его договор знает конечный
-   перечень команд — и ничего сверх него.
-5. **Объявил ли слой бота то, о чём исполнитель спрашивает?** Неотвеченный вопрос
-   молчит: так перенос цели сутки не доезжал до брокера.
-6. **Не смотрит ли движок в будущее?** Старшие свечи — только закрытые, фракталы
-   — только подтверждённые, уровни — только из закрытых периодов.
-7. **Существовала ли эта цена?** Вход и выход обязаны лежать внутри диапазона
-   своего бара с поправкой на сторону рынка.
-8. **Известен ли порядок событий внутри бара?** Если нет — решать против себя, а
-   не удобным способом.
-9. **По какой стороне рынка считалось?** Покупка по цене продавца, продажа по цене
-   покупателя; стоп и цель шорта меряются ценой покупателя.
-10. **Сколько стоит допущение?** Нулевое проскальзывание, мгновенное исполнение,
-    постоянный спред — это допущения, и цена каждого называется числом, а не
-    словами.
-11. **Откуда взят объём?** Паспорт инструмента терминала, округление вниз к шагу,
-    минимальный лот, потолки счёта — в момент сигнала.
-12. **Сойдётся ли живой счёт с расчётом с нуля?** Расчёт с продолжения обязан
-    давать те же сделки поштучно.
-
-Развёрнутые проверки по каждой области — `ПРОВЕРКИ.md`, все правила одной
-таблицей — `ПРАВИЛА.md`.
-
-### Шаг 2. Прогон сторожей
-
-Сперва — те сторожа, что уже есть в самом проекте. Затем общий сторож навыка по
-выгрузке сделок и ряду: `инструменты/сторож-правды.py`. Он не знает правил сетапа
-и проверяет только то, что верно у любого брокера.
-
-Проверка гоняется, а не делается на глаз. «Должно совпадать», «по идее так же»,
-«скорее всего» — не доказательства.
-
-### Шаг 3. Аудит чисел
-
-Взять каждое число, которое движок показывает наружу, и назвать его
-происхождение по цепочке:
+Before checking anything, name **what could have changed** and build the chain
+downwards. Checking only the place you touched is forbidden: the failure almost always
+surfaces further downstream.
 
 ```
-ДАННЫЕ ─► СОБЫТИЕ ─► СИГНАЛ ─► ЗАЯВКА ─► ИСПОЛНЕНИЕ ─► ПОЗИЦИЯ ─► ВЫХОД ─► P&L ─► МЕТРИКА
+DATA ─► MARKUP ─► SIGNAL ─► ORDER ─► EXECUTION ─► POSITION ─► EXIT ─► R ─► EQUITY ─► DRAWDOWN ─► RESULT
 ```
 
-Найдена ошибка на любом звене — **все числа ниже по цепочке считаются
-недостоверными**, включая те, что выглядят невинно.
+Common chains:
 
-### Шаг 4. Таблица соответствия и отчёт
+- lot calculation → position size → risk → money → equity → drawdown → result;
+- candle boundary → higher-timeframe markup → zone → signal → every trade;
+- moment of execution → entry price → R of every trade → every metric at once;
+- spread → entry price and stop trigger → outcome → win rate and profit factor.
 
-Заполнить матрицу «история против боя» и выдать отчёт по шаблону `ОТЧЁТ.md`.
-Ставить «сходится» без доказательства нельзя: есть состояния «доказано частично»,
-«не доказано» и «неприменимо», и ими надо пользоваться.
+If the lot calculation was touched, do not measure the lot — measure the whole tail of
+the chain.
 
-### Шаг 5. Находка становится правилом и тестом
+### Step 1. Twelve questions of live execution
+
+Ask them of every decision before showing any numbers.
+
+1. **When does the order appear at the broker?** The decision was made at a candle
+   close — so there is nothing to fill inside that candle.
+2. **Will the broker accept such an order?** A buy stop below price, a sell stop above.
+3. **How long does the order live?** Every command has its own expiry, and an expired
+   one does not execute.
+4. **Can the executor do what the engine is asking?** Its contract knows a finite list
+   of commands and nothing beyond it.
+5. **Did the bot layer declare what the executor asks for?** An unanswered question
+   stays silent: that is how a target move failed to reach the broker for a day.
+6. **Is the engine looking into the future?** Higher candles closed only, fractals
+   confirmed only, levels from closed periods only.
+7. **Did this price exist?** Entry and exit must lie inside their own bar, adjusted for
+   the side of the market.
+8. **Is the intra-bar ordering known?** If not, resolve it against yourself rather than
+   conveniently.
+9. **Which side of the market was used?** Buy at the ask, sell at the bid; a short's
+   stop and target are measured at the ask.
+10. **What does the assumption cost?** Zero slippage, instant execution, a constant
+    spread — these are assumptions, and the price of each is stated as a number, not in
+    words.
+11. **Where does the volume come from?** The terminal's instrument spec, rounding down
+    to the step, the minimum lot, the account ceilings — at the moment of the signal.
+12. **Will the live account agree with a from-scratch recount?** A continued
+    computation must produce the same trades, one by one.
+
+Expanded checks per area are in [`CHECKS.md`](CHECKS.md); every rule in one table is in
+[`RULES.md`](RULES.md).
+
+### Step 2. Run the guards
+
+First whatever guards the project already has. Then this skill's general guard over a
+trade export and a bar series: [`tools/truth-guard.py`](tools/truth-guard.py). It knows
+nothing about setup rules and checks only what is true at any broker.
+
+A check is run, not eyeballed. "Should match", "presumably the same", "most likely" are
+not proofs.
+
+### Step 3. Audit the numbers
+
+Take every number the engine shows to the outside world and name its origin along the
+chain:
 
 ```
-БЕДА ─► РАЗБОР ─► КОРЕНЬ ─► ПРАВИЛО ─► ТЕСТ ─► СТОРОЖ
+DATA ─► EVENT ─► SIGNAL ─► ORDER ─► EXECUTION ─► POSITION ─► EXIT ─► P&L ─► METRIC
 ```
 
-Одна беда правды — один постоянный тест. Порядок — в `ТЕСТЫ.md`. Новый случай
-дописывается в `БАЗА-ОТКАЗОВ.md`, новое правило — в `ПРАВИЛА.md`. Навык живой: он
-обязан толстеть после каждой находки, иначе та же беда пройдёт второй раз.
+If an error is found at any link, **every number downstream counts as untrustworthy**,
+including the innocent-looking ones.
 
-## Уровни расхождения
+### Step 4. The matrix and the report
 
-| Уровень | Что это | Что делать |
+Fill in the history-versus-live matrix and produce a report from the template in
+[`REPORT.md`](REPORT.md). "Matches" cannot be written without proof: the states "partly
+proven", "not proven" and "not applicable" exist and are meant to be used.
+
+### Step 5. A finding becomes a rule and a test
+
+```
+FAILURE ─► BREAKDOWN ─► ROOT ─► RULE ─► TEST ─► GUARD
+```
+
+One truth failure, one permanent test. The procedure is in [`TESTS.md`](TESTS.md). A new
+case is appended to `FAILURE-DATABASE.md`, a new rule to `RULES.md`. The skill is alive:
+it is obliged to grow after every finding, otherwise the same failure walks past a second
+time.
+
+## Divergence levels
+
+| Level | What it is | What to do |
 |---|---|---|
-| 0 — нет | расхождения нет | идти дальше |
-| 1 — естественное | плавающий спред, обычный рыночный шум | назвать величину числом и идти дальше |
-| 2 — неизвестность | данных не хватает, чтобы доказать исход | пометить неизвестным, решить против себя, записать пробел знания |
-| 3 — ошибка счёта | движок считает не то, что случится | чинить движок, перемерить всю цепочку вниз |
-| 4 — разрыв с реальностью | история показывает поведение, невозможное в бою | **блокировать результат**, чинить, пересчитать эталон |
-| 5 — критично | искажены прибыль, просадка, риск, число сделок или безопасность счёта | **блокировать всё**, сказать немедленно, прежние числа объявить недостоверными |
+| 0 — none | no divergence | move on |
+| 1 — natural | floating spread, ordinary market noise | state the size as a number and move on |
+| 2 — uncertainty | not enough data to prove the outcome | mark it unknown, resolve against yourself, record a knowledge gap |
+| 3 — computation error | the engine computes something other than what will happen | fix the engine, re-measure the whole chain downstream |
+| 4 — reality break | history shows behaviour impossible in live | **block the result**, fix it, recompute the reference |
+| 5 — critical | profit, drawdown, risk, trade count or account safety are distorted | **block everything**, say so immediately, declare the previous numbers untrustworthy |
 
-Уровни 4 и 5 останавливают работу: числа не подаются, правка не переносится, бот
-в бой не идёт.
+Levels 4 and 5 stop the work: numbers are not served, the change is not promoted, the bot
+does not go live.
 
-## Вердикты
+## Verdicts
 
-- **ДОКАЗАНО** — каждое звено цепочки проверено прогоном, расхождений нет либо они
-  уровня 0–1 и названы числом.
-- **ДОКАЗАНО ЧАСТИЧНО** — часть звеньев проверена, остальные названы поимённо как
-  непроверенные.
-- **НЕ ДОКАЗАНО** — проверить не удалось. Это честный вердикт, а не отказ от
-  работы.
-- **ПРОВАЛЕНО** — найдено расхождение уровня 3.
-- **ЗАБЛОКИРОВАНО** — найдено расхождение уровня 4–5.
+- **PROVEN** — every link of the chain checked by a run; no divergences, or only level
+  0–1 ones with a number attached.
+- **PARTLY PROVEN** — some links checked, the rest named as unchecked.
+- **NOT PROVEN** — it could not be checked. This is an honest verdict, not a refusal to
+  work.
+- **FAILED** — a level-3 divergence was found.
+- **BLOCKED** — a level 4–5 divergence was found.
 
-## Отдельный режим — «не знаю»
+## A separate mode — "I don't know"
 
-Если доказать поведение нечем — так и говорить. **«Не знаю» не превращается в
-«наверное, нормально».** Неизвестность записывается пробелом знания с ответом на
-три вопроса: чего не хватает, сколько сделок это задевает, что надо сделать,
-чтобы узнать.
+If there is nothing to prove the behaviour with, say so. **"I don't know" does not turn
+into "probably fine".** Uncertainty is recorded as a knowledge gap answering three
+questions: what is missing, how many trades it touches, what would be needed to find out.
 
-Там, где порядок событий внутри бара неизвестен, ответ всегда осторожный: сделка,
-которой могло не быть, не считается; стоп, который мог случиться, считается.
-Осторожность стоит денег на бумаге — в одном разобранном движке она забрала 119
-сделок и 116 R, — но эти деньги и так не лежали на счёте.
+Where intra-bar ordering is unknown, the answer is always the cautious one: a trade that
+might not have happened is not counted; a stop that might have happened is. Caution costs
+money on paper — in one audited engine it took away 119 trades and 116 R — but that money
+was never on the account anyway.
 
-## Не верить документации
+## Do not trust the documentation
 
-Главный источник правды — **исполняемый путь кода**. Ни README, ни комментарий, ни
-docstring, ни техзадание, ни намерение разработчика доказательством не являются.
+The source of truth is the **executed code path**. Neither a README, nor a comment, nor a
+docstring, nor a spec, nor the developer's intention is a proof.
 
-Это не осторожность ради осторожности. Живой пример — Б21 в базе отказов: описание
-вверху файла движка обещало нарезку суток по Гринвичу, хотя в коде она уже
-несколько дней шла по времени сервера брокера. Тот, кто поверил бы описанию, начал
-бы чинить уже починенное.
+This is not caution for its own sake. A live example is F21 in the failure database: the
+docstring at the top of an engine promised days cut by GMT while the code had been cutting
+them by broker server time for several days already. Anyone who believed the docstring
+would have started fixing what was already fixed.
 
-## Критерий готовности
+## The done criterion
 
-Работа сторожа закончена только тогда, когда есть ответ на вопрос:
+The guard's work is finished only when there is an answer to:
 
-> **Почему я должен верить, что эти исторические числа можно получить в бою?**
+> **Why should I believe these historical numbers can be obtained in live trading?**
 
-и к нему приложена цепочка, где у каждого звена стоит «доказано» или «не
-доказано»:
+with a chain attached where every link is marked "proven" or "not proven":
 
 ```
-РЯД ─► ЧТО БЫЛО ИЗВЕСТНО В МОМЕНТ T ─► СИГНАЛ ─► РЕШЕНИЕ ─► ЗАЯВКА
-   ─► УСЛОВИЯ ИСПОЛНЕНИЯ ─► ПОЗИЦИЯ ─► ВЫХОД ─► ДЕНЬГИ ─► МЕТРИКИ
+SERIES ─► WHAT WAS KNOWN AT MOMENT T ─► SIGNAL ─► DECISION ─► ORDER
+   ─► EXECUTION CONDITIONS ─► POSITION ─► EXIT ─► MONEY ─► METRICS
 ```
 
-## Файлы навыка
+## Files
 
-| Файл | Что в нём |
+| File | What is in it |
 |---|---|
-| `SKILL.md` | этот порядок работы |
-| `БАЗА-ОТКАЗОВ.md` | настоящие беды с числами — чем именно движок врал |
-| `ПРАВИЛА.md` | правила правды П01–П41 одной таблицей: признак беды и как доказать |
-| `ПРОВЕРКИ.md` | что проверять по каждой области и матрица «история против боя» |
-| `ДОГОВОР-БОЯ.md` | с чем сверять: как на самом деле исполняется сделка; образец договора и карта сторожей |
-| `ОТЧЁТ.md` | шаблон отчёта сторожа правды |
-| `ТЕСТЫ.md` | как беда превращается в постоянный тест; реестр тестов |
-| `инструменты/сторож-правды.py` | общий сторож по выгрузке сделок и ряду минуток |
-| `инструменты/проба/` | самопроверка сторожа: десять сделок, девять кривых нарочно |
+| `SKILL.md` | this procedure |
+| [`FAILURE-DATABASE.md`](FAILURE-DATABASE.md) | real failures with numbers — how engines actually lied |
+| [`RULES.md`](RULES.md) | truth rules R01–R41 in one table: symptom and how to prove |
+| [`CHECKS.md`](CHECKS.md) | what to check in each area; the history-versus-live matrix |
+| [`EXECUTION-CONTRACT.md`](EXECUTION-CONTRACT.md) | what to check against: how a trade is really filled; an example contract and a guard map |
+| [`REPORT.md`](REPORT.md) | the report template |
+| [`TESTS.md`](TESTS.md) | how a failure becomes a permanent test; the test register |
+| [`tools/truth-guard.py`](tools/truth-guard.py) | the general guard over a trade export and a minute series |
+| [`tools/fixture/`](tools/fixture/) | the guard's self-check: ten trades, nine deliberately wrong |
 
-## Самопроверка навыка
+Russian translations of all of the above are in [`ru/`](ru/).
 
-Навык считается рабочим, только если умеет поймать каждое из этого списка:
-подглядывание в будущее, перепутанные цены продавца и покупателя, невозможный
-стоп или цель, невозможное исполнение внутри свечи, неверный лот, неверный риск,
-сдвиг часового пояса, неучтённую задержку, разъехавшиеся состояния, расхождение
-прогона с живым слоем.
+## Self-check
 
-Проверяется это не рассуждением, а пробой: `инструменты/проба/` держит десять
-сделок, из которых девять кривые нарочно — по одной на беду из базы отказов.
-Сторож обязан найти на ней десять бед и упасть. **Сторож, зелёный всегда, — не
-сторож**, и это относится к любой новой проверке, которую навык заводит.
+The skill counts as working only if it can catch every one of these: look-ahead bias,
+swapped bid and ask, an impossible stop or target, impossible intra-bar execution, a wrong
+lot, a wrong risk, a timezone shift, unaccounted latency, state divergence, a run
+disagreeing with the live layer.
 
-Что навык сегодня поймать **не может** — записано пробелами знания в конце
-`БАЗА-ОТКАЗОВ.md`: отказы брокера, минимальную дистанцию стопа, частичный вход,
-настоящее проскальзывание и задержку на боевом счёте. Эти дыры названы нарочно,
-чтобы их не принимали за проверенное.
+This is verified not by reasoning but by a fixture: `tools/fixture/` holds ten trades, nine
+of them deliberately wrong — one per failure from the database. The guard must find ten
+findings there and exit non-zero. **A guard that is always green is not a guard**, and that
+applies to every new check the skill adds.
 
-## Стиль доклада
+What the skill **cannot** catch today is recorded as knowledge gaps at the end of
+`FAILURE-DATABASE.md`: broker refusals, the minimum stop distance, partial fills, real
+slippage and live-account latency. Those holes are named on purpose so that nobody mistakes
+them for verified ground.
 
-По-русски, коротко, без кода в ответе. Говорить, что сделано, а не как.
-Обязательно рядом: «было и стало», последний год отдельной строкой, и в столбцах,
-кроме числа сделок, суммы R и просадки, — винрейт, самая длинная череда стопов
-подряд и самая длинная череда целей подряд. Собственные ошибки называть сразу и
-пересчитывать, а не править молча.
+## Reporting style
 
-Числа перед отправкой проверять на правдоподобие: одинаковые столбцы,
-подозрительно круглые значения, невозможный рост счёта — повод остановиться и
-разобраться, а не отправить.
+Short, in the language the person is using, without code in the answer. Say what was done,
+not how. Always side by side: before and after, with the latest year on its own line, and in
+the columns — besides trade count, total R and drawdown — the win rate, the longest run of
+stops and the longest run of targets. Name your own mistakes immediately and recompute
+rather than fixing them quietly.
+
+Check numbers for plausibility before sending: identical columns, suspiciously round values,
+impossible account growth — all reasons to stop and dig rather than send.

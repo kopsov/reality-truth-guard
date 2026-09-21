@@ -1,173 +1,138 @@
 # Reality Truth Guard
 
-**Навык для Claude, который проверяет не стратегию, а движок: правду ли он
-говорит.**
+**A Claude skill that audits your trading engine, not your strategy.**
 
-Красивый бэктест ничего не значит, если его механизм не соответствует реальному
-исполнению. Винрейт ничего не значит, если часть сделок появилась из-за
-заглядывания в будущее. Прибыль ничего не значит, если входы невозможно было
-получить.
+A pretty backtest means nothing if its mechanism does not match real execution. A win
+rate means nothing if some of the trades exist only because the engine looked into the
+future. Profit means nothing if the entries could never have been obtained.
 
-> Не проверяй, работает ли стратегия. Проверяй, правду ли говорит движок.
+> Do not check whether the strategy works. Check whether the engine tells the truth.
+
+*[Русская версия](ru/README.md) — полный перевод документации в папке [`ru/`](ru/).*
 
 ---
 
-## Зачем это нужно
+## Why it exists
 
-Навык собран не из теории, а из разбора настоящих боевых движков. Три находки
-подряд, за две недели, на трёх разных системах:
+This skill is not assembled from theory. It comes from auditing real live trading
+engines. Three findings in a row, over two weeks, on three different systems:
 
-| Что нашлось | Было | Стало |
+| What was found | Before | After |
 |---|---:|---:|
-| судьба ордера решалась раз в свечу, а не в момент события | **+5874 R** | **−1016 R** |
-| фрактал подтверждается следующей свечой, а торговля шла внутри неё | **+1350 R** | **−423 R** |
-| вход в ту же минуту, по закрытию которой родился сигнал | **+672 R** | **+205 R** |
+| an order's fate decided once per candle instead of at the event | **+5874 R** | **−1016 R** |
+| a fractal confirmed by the next candle, while trading happened inside it | **+1350 R** | **−423 R** |
+| a fill inside the very minute whose close produced the signal | **+672 R** | **+205 R** |
 
-Стратегия ни в одном случае не менялась. Менялся только счёт движка.
+Not one strategy rule changed in any of them. Only the engine's arithmetic did.
 
-Все двадцать три случая с числами, корнями и признаками — в
-[`БАЗА-ОТКАЗОВ.md`](БАЗА-ОТКАЗОВ.md). Имена систем убраны, числа настоящие.
+All twenty-three cases, with numbers, roots and symptoms, are in
+[`FAILURE-DATABASE.md`](FAILURE-DATABASE.md). System names are removed; the numbers are
+real.
 
-## Что внутри
+## What is inside
 
-| Файл | Что в нём |
+| File | What is in it |
 |---|---|
-| [`SKILL.md`](SKILL.md) | порядок работы: когда включаться, двенадцать вопросов боя, вердикты, уровни расхождений |
-| [`БАЗА-ОТКАЗОВ.md`](БАЗА-ОТКАЗОВ.md) | 23 настоящих случая с числами — чем именно движки врали |
-| [`ПРАВИЛА.md`](ПРАВИЛА.md) | правила правды П01–П41: признак беды и чем доказывается |
-| [`ПРОВЕРКИ.md`](ПРОВЕРКИ.md) | что проверять по каждой области; матрица «история против боя»; аудит чисел |
-| [`ДОГОВОР-БОЯ.md`](ДОГОВОР-БОЯ.md) | с чем сверять: 14 вопросов к исполнителю, пример заполненного договора, карта сторожей |
-| [`ОТЧЁТ.md`](ОТЧЁТ.md) | шаблон отчёта: вердикт, что доказано, что не доказано, что делать |
-| [`ТЕСТЫ.md`](ТЕСТЫ.md) | как беда превращается в постоянный тест; реестр тестов и долгов |
-| [`инструменты/сторож-правды.py`](инструменты/сторож-правды.py) | сторож по выгрузке сделок и ряду минуток — работает и без Claude |
-| [`инструменты/проба/`](инструменты/проба/) | самопроверка сторожа: десять сделок, девять кривых нарочно |
+| [`SKILL.md`](SKILL.md) | the procedure: when to engage, twelve questions of live execution, verdicts, divergence levels |
+| [`FAILURE-DATABASE.md`](FAILURE-DATABASE.md) | 23 real failures with numbers — how engines actually lied |
+| [`RULES.md`](RULES.md) | truth rules R01–R41: the symptom of each failure and what proves it |
+| [`CHECKS.md`](CHECKS.md) | what to check in each area; the history-versus-live matrix; the number audit |
+| [`EXECUTION-CONTRACT.md`](EXECUTION-CONTRACT.md) | what to check against: 14 questions for the executor, an example contract, a guard map |
+| [`REPORT.md`](REPORT.md) | the report template: verdict, what is proven, what is not, what to do |
+| [`TESTS.md`](TESTS.md) | how a failure becomes a permanent test; the register of tests and debts |
+| [`tools/truth-guard.py`](tools/truth-guard.py) | a guard over a trade export and a bar series — works without Claude |
+| [`tools/fixture/`](tools/fixture/) | the guard's self-check: ten trades, nine deliberately wrong |
+| [`ru/`](ru/) | the full Russian translation |
 
-## Как поставить навык
+## Installing the skill
 
-Навык — это просто папка с файлами. Claude сам её подхватит.
+A skill is just a folder of files. Claude picks it up on its own.
 
-**Для всех проектов сразу:**
+**For every project:**
 
 ```bash
 git clone https://github.com/kopsov/reality-truth-guard.git ~/.claude/skills/reality-truth-guard
 ```
 
-**Только для одного проекта** — положите папку в `.claude/skills/` внутри него:
+**For one project only** — put it in that project's `.claude/skills/`:
 
 ```bash
 git clone https://github.com/kopsov/reality-truth-guard.git .claude/skills/reality-truth-guard
 ```
 
-Обновить позже:
+Update later:
 
 ```bash
 cd ~/.claude/skills/reality-truth-guard && git pull
 ```
 
-Всё. Claude подключит навык сам, как только работа коснётся движка, прогона,
-исполнения, стопа и цели, объёма, спреда, времени или ряда котировок. Можно и
-позвать явно: «проверь сторожем правды».
+That is all. Claude engages the skill by itself as soon as the work touches an engine, a
+run, execution, stop and target, position size, spread, time or a quote series. You can
+also call it explicitly: "audit this with the truth guard".
 
-## Сторож работает и без Claude
+## The guard also works without Claude
 
-`инструменты/сторож-правды.py` — обычный скрипт на Python, без зависимостей.
-Он не знает правил вашего сетапа и не хочет знать: проверяет только то, что верно
-у любого брокера и на любом рынке.
+[`tools/truth-guard.py`](tools/truth-guard.py) is a plain Python script with no
+dependencies. It knows nothing about your setup rules and does not want to: it checks
+only what is true at any broker on any market.
 
 ```bash
-python3 инструменты/сторож-правды.py --сделки сделки.csv --ряд минутки.csv
+python3 tools/truth-guard.py --trades trades.csv --bars minutes.csv
 ```
 
-Столбцы он узнаёт сам — понимает выгрузки MetaTrader, английские и русские имена,
-запятую, точку с запятой и табуляцию. Если имена свои, их можно назвать картой:
-`--карта карта.json`.
+It recognises columns on its own — MetaTrader exports, English and Russian names, comma,
+semicolon and tab. If your names are unusual, declare them with `--map map.json`.
 
-Полезные ключи:
-
-| Ключ | Зачем |
+| Option | What for |
 |---|---|
-| `--сутки-брокера eet-us` | сутки по серверу брокера — проверка срока жизни отложенных |
-| `--спредов 2` | на сколько спредов бара цене разрешено выходить за его край |
-| `--точка 0.01` | размер пункта, если спред в ряду записан пунктами |
-| `--шаг-лота`, `--мин-лот` | правила объёма у брокера |
-| `--мин-стоп` | наименьшая дистанция стопа у брокера |
+| `--broker-day eet-us` | days by broker server time — checks pending-order lifetime |
+| `--spreads 2` | how many bar spreads a price may sit outside its bar |
+| `--point 0.01` | point size, when the series records spread in points |
+| `--lot-step`, `--min-lot` | the broker's volume rules |
+| `--min-stop` | the broker's minimum stop distance |
 
-Что он проверяет: целостность ряда и перепись перерывов, исполнение не раньше и
-не в минуту своего сигнала, срок жизни отложенного ордера, стороны стопа и цели,
-существовала ли цена входа и выхода в своём баре, бары, задевшие и стоп, и цель,
-дубли внутри потока, сходится ли итог в R с ценами, кратность лота, долю сделок с
-исходом ровно −1 R, сколько позиций стояло разом.
+What it checks: series integrity and a census of gaps, fills that are not earlier than
+and not inside their own signal minute, pending-order lifetime, the sides of stop and
+target, whether the entry and exit prices existed in their own bars, bars that hit both
+stop and target, duplicates inside a stream, whether the R result agrees with the prices,
+lot-step compliance, the share of trades landing at exactly −1 R, and how many positions
+were open at once.
 
-Итог — «БЕД: N» и код возврата 1, если хоть одна проверка провалена. Проверки, для
-которых в выгрузке нет столбцов, **не молчат**: они печатаются отдельным списком
-как пробелы знания, а не как «всё хорошо».
+The result is `FINDINGS: N` and exit code 1 if any check failed. Checks whose columns are
+missing **do not stay silent**: they are printed as a separate list of knowledge gaps,
+never as "all good".
 
-## Самопроверка
+## Self-check
 
-Сторож, зелёный всегда, — не сторож. В `инструменты/проба/` лежат десять сделок,
-девять из которых кривые нарочно — по одной на беду из базы отказов:
-
-```bash
-python3 инструменты/сторож-правды.py \
-  --сделки инструменты/проба/сделки-кривые.csv \
-  --ряд инструменты/проба/ряд-проба.csv \
-  --сутки-брокера eet-us --шаг-лота 0.01 --мин-лот 0.01
-```
-
-Ожидаемый итог — десять бед и код возврата 1. Меньше — сторож ослеп; больше —
-появилась ложная тревога, и её надо разобрать так же строго, как пропущенную беду.
-
-## Границы
-
-Навык честно говорит «не знаю» и не превращает это в «наверное, нормально».
-Чего он сегодня **не** умеет — записано пробелами знания в конце базы отказов:
-отказы брокера, минимальная дистанция стопа, частичный вход, настоящее
-проскальзывание и задержка на боевом счёте. Эти дыры названы нарочно, чтобы их не
-принимали за проверенное.
-
-И главное, что стоит понимать заранее: **числа после честной проверки почти всегда
-становятся хуже.** Это не поломка навыка, а его работа.
-
-## Вклад
-
-Нашли беду правды, которой здесь нет? Присылайте её в базу отказов тем же
-порядком, каким написаны остальные: что было, чем это стоило в числах, какой
-корень, какое правило из этого следует и каким прогоном оно проверяется. Случай
-без чисел — впечатление, а не беда.
-
-## Лицензия
-
-MIT — см. [LICENSE](LICENSE). Пользуйтесь, правьте, встраивайте.
-
----
-
-## English
-
-**A Claude skill that audits your trading engine, not your strategy.**
-
-A backtest number is worthless until you can prove the same number is reachable in
-live execution. This skill checks the engine for the ways it lies: look-ahead
-bias, intra-bar event ordering, orders a broker would reject, fills at prices that
-never existed, wrong side of the spread, zero-slippage assumptions, lot sizing
-that ignores the instrument spec, broker-time candle boundaries, and state drift
-between backtest and live.
-
-It answers with a verdict — proven, partly proven, not proven, failed, blocked —
-and never turns "I don't know" into "probably fine".
-
-It is built from 23 real failures found in live trading projects, each with its
-own numbers. Three of them, found within two weeks, moved three different engines
-from **+5874 R to −1016 R**, from **+1350 R to −423 R** and from **+672 R to
-+205 R** — without changing a single strategy rule.
-
-Documentation is in Russian. The standalone checker
-(`инструменты/сторож-правды.py`) is a dependency-free Python script that reads
-common trade exports and minute bars, and it prints its findings in Russian too.
-
-Install for all projects:
+A guard that is always green is not a guard. [`tools/fixture/`](tools/fixture/) holds ten
+trades, nine of them deliberately wrong — one per failure from the database:
 
 ```bash
-git clone https://github.com/kopsov/reality-truth-guard.git ~/.claude/skills/reality-truth-guard
+python3 tools/truth-guard.py \
+  --trades tools/fixture/trades-broken.csv \
+  --bars tools/fixture/bars.csv \
+  --broker-day eet-us --lot-step 0.01 --min-lot 0.01
 ```
 
-MIT licensed.
+Expected: ten findings and exit code 1. Fewer means the guard has gone blind; more means a
+false alarm has appeared, and it must be investigated as strictly as a missed failure.
+
+## Limits
+
+The skill says "I don't know" honestly and does not turn that into "probably fine". What
+it cannot do today is recorded as knowledge gaps at the end of the failure database:
+broker refusals, the minimum stop distance, partial fills, real slippage and live-account
+latency. Those holes are named on purpose so nobody mistakes them for verified ground.
+
+And the thing worth understanding up front: **numbers almost always get worse after an
+honest audit.** That is the skill working, not breaking.
+
+## Contributing
+
+Found a truth failure that is not here? Send it to the failure database in the same shape
+as the rest: what happened, what it cost in numbers, the root, the rule that follows, and
+the run that proves it. A case without numbers is an impression, not a failure.
+
+## License
+
+MIT — see [LICENSE](LICENSE). Use it, change it, embed it.
