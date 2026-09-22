@@ -44,7 +44,7 @@ python3 tools/capture-failure.py case.json
 python3 tools/self-audit.py
 ```
 
-Then open a pull request. Run the self-audit first — it refuses anything that
+Then open a pull request. The self-audit runs in CI and will refuse anything that
 leaves the skill inconsistent: a failure with no rule, a rule with no test, a
 translation left behind, a dangling code, a broken link, or a fixture the guard
 no longer catches.

@@ -240,7 +240,7 @@ of editing three files by hand is exactly how findings get lost.
 against itself: every failure declares its rules and its test, every code
 referenced exists, codes run without gaps, links resolve, both languages carry the
 same codes, and the fixture still yields exactly ten findings while staying quiet
-on a sound export. It is meant to run before every commit and in CI.
+on a sound export. It runs in CI on every push.
 
 **The private overlay.** Cases that cannot be published go in `local/`, which git
 ignores. The skill reads them exactly like the public ones. That is how it runs on

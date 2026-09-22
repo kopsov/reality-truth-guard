@@ -43,7 +43,7 @@ real.
 | [`tools/truth-guard.py`](tools/truth-guard.py) | a guard over a trade export and a bar series — works without Claude |
 | [`tools/guard-hook.py`](tools/guard-hook.py) | the gate: blocks a turn from ending until the guards have run clean |
 | [`tools/capture-failure.py`](tools/capture-failure.py) | writes a finding into all three registers in one command |
-| [`tools/self-audit.py`](tools/self-audit.py) | the skill checking itself — run it before every commit |
+| [`tools/self-audit.py`](tools/self-audit.py) | the skill checking itself; runs in CI on every push |
 | [`tools/fixture/`](tools/fixture/) | the guard's self-check: ten broken trades and four sound ones |
 | [`ru/`](ru/) | the full Russian translation |
 
@@ -157,7 +157,7 @@ ignores, via `--local`.
 
 `python3 tools/self-audit.py` then checks the skill against itself — dangling codes,
 gaps in numbering, a failure with no rule, a translation left behind, a fixture the
-guard no longer catches. Run it before every commit.
+guard no longer catches. CI runs it on every push.
 
 See [CONTRIBUTING.md](CONTRIBUTING.md) if you want to send a case here.
 

@@ -1,0 +1,45 @@
+name: self-audit
+
+# The skill checks itself on every push and every pull request. A skill that
+# grows by hand drifts by hand: a failure written down without its rule, a rule
+# citing a test nobody wrote, a translation left on the old numbering, a fixture
+# that quietly stopped catching things. None of it is visible by reading.
+#
+# This is the same audit anyone can run locally with `python3 tools/self-audit.py`.
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+  workflow_dispatch:
+
+jobs:
+  audit:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+
+      - name: The guard finds the planted failures and stays quiet on a sound export
+        run: |
+          set -e
+          python3 tools/truth-guard.py \
+            --trades tools/fixture/trades-broken.csv \
+            --bars tools/fixture/bars.csv \
+            --broker-day eet-us --lot-step 0.01 --min-lot 0.01 \
+            && { echo "The guard passed a deliberately broken export. It has gone blind."; exit 1; } \
+            || echo "Broken fixture: the guard failed it, as it must."
+          python3 tools/truth-guard.py \
+            --trades tools/fixture/trades-clean.csv \
+            --bars tools/fixture/bars.csv \
+            --broker-day eet-us
+          echo "Sound fixture: the guard stayed quiet, as it must."
+
+      - name: The skill is consistent with itself
+        run: python3 tools/self-audit.py
+
+      - name: Every tool still compiles
+        run: python3 -m compileall -q tools
