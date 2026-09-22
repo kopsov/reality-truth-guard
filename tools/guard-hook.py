@@ -159,12 +159,19 @@ def do_gate(root, manifest):
                 blocks = int((f.read() or "0").strip() or 0)
     except (OSError, ValueError):
         blocks = 0
-    if blocks >= MAX_BLOCKS:
+    # A project that declares no checks has nothing the gate could be satisfied
+    # by. Say that once — it is itself the finding — and then let go.
+    limit = MAX_BLOCKS if (manifest.get("checks") or []) else 1
+    if blocks >= limit:
         print(json.dumps({
             "systemMessage":
-                "REALITY TRUTH GUARD: the gate has blocked %d times and is "
+                "REALITY TRUTH GUARD: the gate has blocked %d time(s) and is "
                 "letting go. The engine was changed and the guard has still not "
-                "run clean — these numbers are NOT verified." % blocks,
+                "run clean — these numbers are NOT verified.%s" % (
+                    blocks,
+                    " This project declares no checks at all: fill in"
+                    " .claude/reality-guard.json." if not (manifest.get("checks") or [])
+                    else ""),
         }, ensure_ascii=False))
         return 0
 
