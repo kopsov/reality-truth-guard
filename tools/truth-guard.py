@@ -28,6 +28,9 @@ Options:
     --min-lot <N>         broker minimum volume
     --min-stop <price>    broker minimum stop distance
     --examples <N>        how many examples to print per finding (default 3)
+    --stamp <file>        on a clean run (exit 0) touch this file. The Stop gate
+                          in tools/guard-hook.py reads it to tell a guard that
+                          has actually been run from one that has not
 
 Result: "FINDINGS: N" and exit code 1 if any check failed. Checks whose columns
 are missing do not stay silent: they are listed separately as knowledge gaps,
@@ -664,6 +667,7 @@ def main():
     p.add_argument("--min-lot", dest="min_lot", type=float)
     p.add_argument("--min-stop", dest="min_stop", type=float)
     p.add_argument("--examples", type=int, default=3)
+    p.add_argument("--stamp", help="touch this file when the run is clean")
     a = p.parse_args()
 
     mapping = {}
@@ -717,6 +721,15 @@ def main():
         print("FINDINGS: %d — the run disagrees with live execution. Fix the "
               "engine, do not explain it away." % len(report.findings))
         return 1
+    if a.stamp:
+        # A proof that the guard actually ran, for the Stop gate. Only a clean
+        # run leaves it: a run with findings must not open the gate.
+        try:
+            os.makedirs(os.path.dirname(os.path.abspath(a.stamp)), exist_ok=True)
+            with open(a.stamp, "w", encoding="utf-8") as f:
+                f.write(datetime.now(timezone.utc).isoformat())
+        except OSError as e:
+            print("Could not write the stamp %s: %s" % (a.stamp, e))
     print("No findings. That does not mean \"the numbers are right\": this guard "
           "checks only what is true at any broker.")
     return 0

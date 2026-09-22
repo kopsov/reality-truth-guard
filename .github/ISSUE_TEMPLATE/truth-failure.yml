@@ -1,0 +1,99 @@
+name: Truth failure
+description: An engine said something live execution would not have produced
+labels: ["failure"]
+body:
+  - type: markdown
+    attributes:
+      value: |
+        One truth failure, one permanent test. Fill this in and the case can go
+        straight into the database.
+
+        **A case without numbers is an impression, not a failure.** If you cannot
+        measure it yet, say so in the cost field — an honest knowledge gap is a
+        respectable place to be.
+
+  - type: input
+    id: title
+    attributes:
+      label: What went wrong, in one line
+      placeholder: An order's fate decided once per candle instead of at the event
+    validations:
+      required: true
+
+  - type: textarea
+    id: where
+    attributes:
+      label: Where
+      description: What kind of engine, and how it surfaced. Anonymise the system if you need to.
+    validations:
+      required: true
+
+  - type: textarea
+    id: what
+    attributes:
+      label: What happened
+      description: What the engine did, and why that is not what happens at a broker.
+    validations:
+      required: true
+
+  - type: textarea
+    id: cost
+    attributes:
+      label: The cost, in numbers
+      description: >
+        How many trades, how much R, what happened to drawdown and win rate.
+        Before and after, side by side.
+    validations:
+      required: true
+
+  - type: textarea
+    id: symptom
+    attributes:
+      label: The symptom that works everywhere
+      description: >
+        How this failure looks from the outside on any engine — something another
+        person could spot without reading your code. Optional but valuable.
+
+  - type: textarea
+    id: root
+    attributes:
+      label: Root
+      description: >
+        What exactly the engine took as fact without being entitled to.
+        "We forgot to check" is not a root.
+    validations:
+      required: true
+
+  - type: input
+    id: rules
+    attributes:
+      label: Which existing rules it breaks
+      description: Codes from RULES.md, comma separated. Leave empty if none fit.
+      placeholder: R13, R15
+
+  - type: textarea
+    id: new_rule
+    attributes:
+      label: The new rule it suggests
+      description: >
+        Phrase it so it can be checked by a run. If there is nothing to check it
+        with, it is a wish rather than a rule — say that, and it goes into the
+        knowledge gaps instead.
+
+  - type: textarea
+    id: test
+    attributes:
+      label: How a permanent test would catch it
+      description: >
+        What the test looks at, and what run closes it. If you already wrote one,
+        link it.
+
+  - type: checkboxes
+    id: honesty
+    attributes:
+      label: Before you send
+      options:
+        - label: The numbers are real, not estimated from memory
+          required: true
+        - label: I have removed anything I cannot share, but not the numbers
+          required: true

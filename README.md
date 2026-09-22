@@ -41,7 +41,10 @@ real.
 | [`REPORT.md`](REPORT.md) | the report template: verdict, what is proven, what is not, what to do |
 | [`TESTS.md`](TESTS.md) | how a failure becomes a permanent test; the register of tests and debts |
 | [`tools/truth-guard.py`](tools/truth-guard.py) | a guard over a trade export and a bar series — works without Claude |
-| [`tools/fixture/`](tools/fixture/) | the guard's self-check: ten trades, nine deliberately wrong |
+| [`tools/guard-hook.py`](tools/guard-hook.py) | the gate: blocks a turn from ending until the guards have run clean |
+| [`tools/capture-failure.py`](tools/capture-failure.py) | writes a finding into all three registers in one command |
+| [`tools/self-audit.py`](tools/self-audit.py) | the skill checking itself — run it before every commit |
+| [`tools/fixture/`](tools/fixture/) | the guard's self-check: ten broken trades and four sound ones |
 | [`ru/`](ru/) | the full Russian translation |
 
 ## Installing the skill
@@ -116,6 +119,47 @@ python3 tools/truth-guard.py \
 
 Expected: ten findings and exit code 1. Fewer means the guard has gone blind; more means a
 false alarm has appeared, and it must be investigated as strictly as a missed failure.
+
+## Making it stick
+
+A skill is a set of instructions, and instructions get skipped. The gate turns this
+one into something that holds without anyone remembering it.
+
+Declare what to watch and what to run in your project's
+`.claude/reality-guard.json`:
+
+```json
+{
+  "watch":  ["engine/**", "bot/**", "backtest/**"],
+  "checks": [
+    {"name": "reference snapshot", "cmd": "python3 drafts/compare-to-reference.py"},
+    {"name": "truth guard",        "cmd": "python3 ~/.claude/skills/reality-truth-guard/tools/truth-guard.py --trades drafts/trades.csv --bars drafts/minutes.csv --broker-day eet-us"}
+  ]
+}
+```
+
+Then wire two hooks into `.claude/settings.json`: `guard-hook.py mark` on
+`PostToolUse` for `Write|Edit`, and `guard-hook.py gate` on `Stop`. From then on,
+editing an engine file and trying to finish without running the guards is blocked,
+with the reason spelled out. Running `guard-hook.py run` executes your checks and,
+only if every one of them passes, opens the gate.
+
+After three blocks the gate lets go rather than trapping the session — and says
+loudly that the numbers are unverified when it does.
+
+## Feeding it
+
+Found something? `python3 tools/capture-failure.py --template > case.json`, fill it
+in, and `python3 tools/capture-failure.py case.json` writes it into the failure
+database, the rules register and the test register at once, in both languages, with
+the next free codes. Cases that cannot be published go in `local/`, which git
+ignores, via `--local`.
+
+`python3 tools/self-audit.py` then checks the skill against itself — dangling codes,
+gaps in numbering, a failure with no rule, a translation left behind, a fixture the
+guard no longer catches. Run it before every commit.
+
+See [CONTRIBUTING.md](CONTRIBUTING.md) if you want to send a case here.
 
 ## Limits
 

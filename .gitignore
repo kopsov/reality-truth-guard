@@ -1,3 +1,10 @@
 __pycache__/
 *.py[cod]
 .DS_Store
+
+# Private failure cases — real names, real numbers, nobody else's business.
+# The skill reads them exactly like the public ones; git never sees them.
+local/
+
+# Gate state written by tools/guard-hook.py inside a project.
+.reality-guard-*

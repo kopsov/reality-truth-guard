@@ -216,6 +216,40 @@ SERIES ─► WHAT WAS KNOWN AT MOMENT T ─► SIGNAL ─► DECISION ─► OR
    ─► EXECUTION CONDITIONS ─► POSITION ─► EXIT ─► MONEY ─► METRICS
 ```
 
+## How the skill keeps itself alive
+
+A skill is a set of instructions, and instructions get skipped: the session ends,
+the work did not look like engine work, somebody said "just fix it". Four pieces
+of machinery turn this one from a habit into something that holds without anyone
+remembering it.
+
+**The gate.** [`tools/guard-hook.py`](tools/guard-hook.py), wired into a project's
+`.claude/settings.json`, marks every edit to an engine file and then refuses to
+let the turn end until the project's guards have run clean. It is not a reminder
+— a Stop hook blocks. The project declares what to watch and what to run in
+`.claude/reality-guard.json`. After three blocks the gate lets go rather than
+trapping the session, and says loudly that the numbers are unverified when it
+does.
+
+**The capture tool.** [`tools/capture-failure.py`](tools/capture-failure.py)
+writes a finding into the failure database, the rules register and the test
+register in one command, in house style, with the next free codes. The friction
+of editing three files by hand is exactly how findings get lost.
+
+**The self-audit.** [`tools/self-audit.py`](tools/self-audit.py) checks the skill
+against itself: every failure declares its rules and its test, every code
+referenced exists, codes run without gaps, links resolve, both languages carry the
+same codes, and the fixture still yields exactly ten findings while staying quiet
+on a sound export. It is meant to run before every commit and in CI.
+
+**The private overlay.** Cases that cannot be published go in `local/`, which git
+ignores. The skill reads them exactly like the public ones. That is how it runs on
+a real desk: public cases for everyone, private cases beside them.
+
+None of this makes the skill self-teaching. It does not watch your runs and it
+does not learn on its own — somebody still has to notice a failure and write it
+down. What the machinery removes is every excuse for not doing so.
+
 ## Files
 
 | File | What is in it |
@@ -228,7 +262,10 @@ SERIES ─► WHAT WAS KNOWN AT MOMENT T ─► SIGNAL ─► DECISION ─► OR
 | [`REPORT.md`](REPORT.md) | the report template |
 | [`TESTS.md`](TESTS.md) | how a failure becomes a permanent test; the test register |
 | [`tools/truth-guard.py`](tools/truth-guard.py) | the general guard over a trade export and a minute series |
-| [`tools/fixture/`](tools/fixture/) | the guard's self-check: ten trades, nine deliberately wrong |
+| [`tools/fixture/`](tools/fixture/) | the guard's self-check: ten broken trades and four sound ones |
+| [`tools/guard-hook.py`](tools/guard-hook.py) | the gate: marks engine edits, blocks the turn until the guards run clean |
+| [`tools/capture-failure.py`](tools/capture-failure.py) | writes a finding into all three registers in one command |
+| [`tools/self-audit.py`](tools/self-audit.py) | the skill checking itself; runs in CI |
 
 Russian translations of all of the above are in [`ru/`](ru/).
 
